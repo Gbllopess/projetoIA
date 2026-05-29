@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Pro - Gerenciador Inteligente</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <span class="logo-icon">📊</span>
+                <span>DashboardPro</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" onclick="showPage('home')" class="nav-link active">Home</a></li>
+                <li><a href="#" onclick="showPage('dashboard')" class="nav-link">Dashboard</a></li>
+                <li><a href="#" onclick="showPage('tasks')" class="nav-link">Tarefas</a></li>
+                <li><a href="#" onclick="showPage('help')" class="nav-link">Ajuda</a></li>
+            </ul>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                <span id="themeIcon">🌙</span>
+                <span id="themeLabel"></span>
+            </button>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Landing Page -->
+        <section id="home" class="page active">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">Organize Sua Produtividade</h1>
+                    <p class="hero-subtitle">Gerencie tarefas, acompanhe métricas e controle tudo em um único lugar</p>
+                    <button class="btn btn-primary" onclick="showPage('dashboard')">Começar Agora</button>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-box">📈</div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <section class="features">
+                <h2>Recursos Principais</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Dashboard Inteligente</h3>
+                        <p>Visualize métricas importantes e acompanhe seu progresso em tempo real</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">✓</div>
+                        <h3>Gerenciador de Tarefas</h3>
+                        <p>Crie, edite e organize suas tarefas com facilidade e eficiência</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Responsivo</h3>
+                        <p>Funciona perfeitamente em desktop, tablet e mobile</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Rápido e Leve</h3>
+                        <p>Interface otimizada para melhor performance e experiência</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="stats">
+                <div class="stat-item">
+                    <h3>1000+</h3>
+                    <p>Usuários Ativos</p>
+                </div>
+                <div class="stat-item">
+                    <h3>500K+</h3>
+                    <p>Tarefas Completadas</p>
+                </div>
+                <div class="stat-item">
+                    <h3>99.9%</h3>
+                    <p>Uptime</p>
+                </div>
+            </section>
+        </section>
+
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <p>Acompanhe suas métricas e progresso</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('overview')">Visão Geral</button>
+                <button class="tab-btn" onclick="showTab('analytics')">Análitica</button>
+                <button class="tab-btn" onclick="showTab('users')">Usuários</button>
+                <button class="tab-btn" onclick="showTab('settings')">Configurações</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-pane active">
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <h3>Tarefas Totais</h3>
+                            <p class="card-number">24</p>
+                            <p class="card-meta">↑ 12% este mês</p>
+                        </div>
+                        <div class="card">
+                            <h3>Concluídas</h3>
+                            <p class="card-number">18</p>
+                            <p class="card-meta">75% completo</p>
+                        </div>
+                        <div class="card">
+                            <h3>Pendentes</h3>
+                            <p class="card-number">6</p>
+                            <p class="card-meta">25% restante</p>
+                        </div>
+                        <div class="card">
+                            <h3>Vencidas</h3>
+                            <p class="card-number">0</p>
+                            <p class="card-meta">Sem atrasos</p>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                        <div class="chart-container">
+                            <h3>Tarefas por Status</h3>
+                            <svg id="statusChart" width="100%" height="250" style="touch-action: none;"></svg>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Tarefas por Prioridade</h3>
+                            <svg id="priorityChart" width="100%" height="250" style="touch-action: none;"></svg>
+                        </div>
+                    </div>
+
+                    <div class="chart-container" style="margin-top: 2rem;">
+                        <h3>Progresso da Semana</h3>
+                        <div class="progress-bar-item">
+                            <span>Seg</span>
+                            <div class="progress-bar"><div style="width: 60%"></div></div>
+                        </div>
+                        <div class="progress-bar-item">
+                            <span>Ter</span>
+                            <div class="progress-bar"><div style="width: 75%"></div></div>
+                        </div>
+                        <div class="progress-bar-item">
+                            <span>Qua</span>
+                            <div class="progress-bar"><div style="width: 85%"></div></div>
+                        </div>
+                        <div class="progress-bar-item">
+                            <span>Qui</span>
+                            <div class="progress-bar"><div style="width: 70%"></div></div>
+                        </div>
+                        <div class="progress-bar-item">
+                            <span>Sex</span>
+                            <div class="progress-bar"><div style="width: 90%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics" class="tab-pane">
+                    <div class="analytics-container">
+                        <div class="card">
+                            <h3>Performance Geral</h3>
+                            <div class="metric">
+                                <span>Tempo Médio por Tarefa</span>
+                                <strong>45 min</strong>
+                            </div>
+                            <div class="metric">
+                                <span>Taxa de Conclusão</span>
+                                <strong>92%</strong>
+                            </div>
+                            <div class="metric">
+                                <span>Produtividade</span>
+                                <strong>+18%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Tab -->
+                <div id="users" class="tab-pane">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Tarefas</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>João Silva</td>
+                                <td>joao@example.com</td>
+                                <td>12</td>
+                                <td><span class="badge active">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td>Maria Santos</td>
+                                <td>maria@example.com</td>
+                                <td>8</td>
+                                <td><span class="badge active">Ativo</span></td>
+                            </tr>
+                            <tr>
+                                <td>Pedro Costa</td>
+                                <td>pedro@example.com</td>
+                                <td>15</td>
+                                <td><span class="badge active">Ativo</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings" class="tab-pane">
+                    <div class="settings-container">
+                        <div class="setting-group">
+                            <h3>Preferências Gerais</h3>
+                            <label class="checkbox">
+                                <input type="checkbox" checked>
+                                <span>Notificações ativas</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" checked>
+                                <span>Tema escuro</span>
+                            </label>
+                        </div>
+                        <div class="setting-group">
+                            <h3>Privacidade</h3>
+                            <label class="checkbox">
+                                <input type="checkbox" checked>
+                                <span>Perfil público</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox">
+                                <span>Compartilhar dados com análise</span>
+                            </label>
+                        </div>
+                        <button class="btn btn-secondary">Salvar Configurações</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tasks Page -->
+        <section id="tasks" class="page">
+            <div class="tasks-header">
+                <h1>Gerenciador de Tarefas</h1>
+                <button class="btn btn-primary" onclick="showAddTaskForm()">+ Nova Tarefa</button>
+            </div>
+
+            <!-- Add Task Form (hidden by default) -->
+            <div id="taskForm" class="task-form hidden">
+                <div class="form-group">
+                    <input type="text" id="taskTitle" placeholder="Título da tarefa" class="form-input">
+                </div>
+                <div class="form-group">
+                    <textarea id="taskDescription" placeholder="Descrição da tarefa" class="form-input" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <select id="taskPriority" class="form-input">
+                        <option value="low">Baixa Prioridade</option>
+                        <option value="medium" selected>Média Prioridade</option>
+                        <option value="high">Alta Prioridade</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="addTask()">Adicionar Tarefa</button>
+                    <button class="btn btn-secondary" onclick="hideAddTaskForm()">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Task Tabs -->
+            <div class="task-tabs">
+                <button class="task-tab-btn active" onclick="filterTasks('all')">Todas (0)</button>
+                <button class="task-tab-btn" onclick="filterTasks('pending')">Pendentes (0)</button>
+                <button class="task-tab-btn" onclick="filterTasks('completed')">Concluídas (0)</button>
+            </div>
+
+            <!-- Tasks List -->
+            <div id="tasksList" class="tasks-list">
+                <!-- Tasks will be added here dynamically -->
+            </div>
+        </section>
+
+        <!-- Help Page -->
+        <section id="help" class="page">
+            <div class="dashboard-header">
+                <h1>❓ Centro de Ajuda</h1>
+                <p>Dicas, sugestões e guias de uso</p>
+            </div>
+
+            <div class="help-grid">
+                <div class="help-card">
+                    <h3>🚀 Como Começar</h3>
+                    <ul>
+                        <li>Clique em "Tarefas" para gerenciar suas atividades</li>
+                        <li>Use "+ Nova Tarefa" para criar uma tarefa</li>
+                        <li>Defina a prioridade (Baixa, Média, Alta)</li>
+                        <li>Marque como completa quando terminar (✓)</li>
+                        <li>Delete tarefas que não são mais necessárias</li>
+                    </ul>
+                </div>
+
+                <div class="help-card">
+                    <h3>📊 Usando o Dashboard</h3>
+                    <ul>
+                        <li><strong>Visão Geral:</strong> Métricas em tempo real</li>
+                        <li><strong>Análitica:</strong> Performance e produtividade</li>
+                        <li><strong>Usuários:</strong> Lista de usuários do sistema</li>
+                        <li><strong>Configurações:</strong> Personalize suas preferências</li>
+                    </ul>
+                </div>
+
+                <div class="help-card">
+                    <h3>💡 Dicas & Truques</h3>
+                    <ul>
+                        <li>Use prioridades para organizar melhor</li>
+                        <li>Filtre tarefas por status (Todas, Pendentes, Concluídas)</li>
+                        <li>Seus dados são salvos automaticamente</li>
+                        <li>Alterne entre tema claro e escuro (botão no topo)</li>
+                        <li>Acesse de qualquer dispositivo - sempre sincronizado!</li>
+                    </ul>
+                </div>
+
+                <div class="help-card">
+                    <h3>⌨️ Atalhos</h3>
+                    <ul>
+                        <li><code>Enter</code> - Confirmar nova tarefa</li>
+                        <li><code>F12</code> - Abrir desenvolvedor (problemas?)</li>
+                        <li><code>Ctrl+K</code> - Pesquisar (em breve)</li>
+                    </ul>
+                </div>
+
+                <div class="help-card">
+                    <h3>🎨 Temas</h3>
+                    <ul>
+                        <li>Clique no botão de tema no topo da página</li>
+                        <li>Sua preferência é salva automaticamente</li>
+                        <li>Tema escuro (Luna) - Melhor para a noite</li>
+                        <li>Tema claro (Solar) - Melhor para o dia</li>
+                    </ul>
+                </div>
+
+                <div class="help-card">
+                    <h3>❓ FAQ</h3>
+                    <ul>
+                        <li><strong>Dados perdidos?</strong> Verifique seu banco MySQL</li>
+                        <li><strong>Temas não mudam?</strong> Limpe o cache (Ctrl+Shift+Del)</li>
+                        <li><strong>API não responde?</strong> Reinicie o backend</li>
+                        <li><strong>Demora para carregar?</strong> Verifique sua conexão</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="suggestions-section">
+                <h2>💬 Sugestões de Funcionalidades</h2>
+                <p style="color: var(--light-text); margin-bottom: 2rem;">Recursos que planejamos adicionar em breve:</p>
+                <div class="suggestions-grid">
+                    <div class="suggestion-item">
+                        <h4>📅 Calendário</h4>
+                        <p>Visualize suas tarefas em um calendário interativo</p>
+                    </div>
+                    <div class="suggestion-item">
+                        <h4>🔔 Notificações</h4>
+                        <p>Receba lembretes de tarefas que estão vencendo</p>
+                    </div>
+                    <div class="suggestion-item">
+                        <h4>📊 Relatórios</h4>
+                        <p>Gere relatórios de produtividade e progresso</p>
+                    </div>
+                    <div class="suggestion-item">
+                        <h4>👥 Compartilhamento</h4>
+                        <p>Compartilhe tarefas e collaborate em tempo real</p>
+                    </div>
+                    <div class="suggestion-item">
+                        <h4>📱 App Mobile</h4>
+                        <p>Aplicativo nativo para iOS e Android</p>
+                    </div>
+                    <div class="suggestion-item">
+                        <h4>🤖 IA Assistente</h4>
+                        <p>Assistente inteligente para sugerir tarefas</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 DashboardPro. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
