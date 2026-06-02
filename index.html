@@ -4,31 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Pro - Gerenciador Inteligente</title>
+    <meta name="description" content="Gerencie tarefas, acompanhe métricas e controle tudo em um único lugar com inteligência.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+    <!-- Search Modal -->
+    <div id="searchModal" class="search-modal" onclick="if(event.target===this)closeSearch()">
+        <div class="search-modal-content">
+            <div class="search-input-wrap">
+                <i data-lucide="search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar tarefas, páginas..." oninput="handleSearch(this.value)" autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="confirm-modal" onclick="if(event.target===this)closeConfirm(false)">
+        <div class="confirm-content">
+            <div class="confirm-icon" id="confirmIcon"><i data-lucide="alert-triangle"></i></div>
+            <h3 id="confirmTitle">Confirmar</h3>
+            <p id="confirmMessage">Tem certeza?</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closeConfirm(false)">Cancelar</button>
+                <button class="btn btn-primary" id="confirmBtn" onclick="closeConfirm(true)">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transactionModal" class="search-modal" style="display:none;" onclick="if(event.target===this)closeTransactionModal()">
+        <div class="search-modal-content" style="max-width:400px;background:var(--card-bg);padding:1.5rem;border-radius:12px;border:1px solid var(--border-color);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 style="margin:0;color:var(--text-light);display:flex;align-items:center;gap:0.5rem;"><i data-lucide="plus-circle"></i> Nova Transação</h3>
+                <button onclick="closeTransactionModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="transDesc" class="form-input" placeholder="Ex: Salário, Aluguel, Ifood..." autocomplete="off">
+            </div>
+            <div class="form-group" style="display:flex;gap:1rem;">
+                <div style="flex:1">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="transAmount" class="form-input" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div style="flex:1">
+                    <label>Data</label>
+                    <input type="date" id="transDate" class="form-input">
+                </div>
+            </div>
+            <div class="form-group" style="display:flex;gap:1rem;">
+                <div style="flex:1">
+                    <label>Tipo</label>
+                    <select id="transType" class="form-input" onchange="updateTransCategories()">
+                        <option value="expense">Despesa</option>
+                        <option value="income">Receita</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label>Categoria</label>
+                    <select id="transCategory" class="form-input">
+                        <!-- Populated dynamically via updateTransCategories() -->
+                        <option value="Casa">Casa</option>
+                        <option value="Alimentação">Alimentação</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Lazer">Lazer</option>
+                        <option value="Saúde">Saúde</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:1rem;" onclick="saveTransaction()">Salvar Transação</button>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-container">
-            <div class="navbar-logo">
-                <span class="logo-icon">📊</span>
+            <div class="navbar-logo" onclick="showPage('home')" style="cursor:pointer">
+                <span class="logo-icon"><i data-lucide="layout-dashboard"></i></span>
                 <span>DashboardPro</span>
             </div>
-            <ul class="nav-menu">
+            <ul class="nav-menu" id="navMenu">
                 <li><a href="#" onclick="showPage('home')" class="nav-link active">Home</a></li>
                 <li><a href="#" onclick="showPage('dashboard')" class="nav-link">Dashboard</a></li>
                 <li><a href="#" onclick="showPage('tasks')" class="nav-link">Tarefas</a></li>
+                <li><a href="#" onclick="showPage('finances')" class="nav-link">Finanças</a></li>
+                <li><a href="#" onclick="showPage('investments')" class="nav-link">Investimentos</a></li>
                 <li><a href="#" onclick="showPage('help')" class="nav-link">Ajuda</a></li>
             </ul>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
-                <span id="themeIcon">🌙</span>
-                <span id="themeLabel"></span>
-            </button>
-            <div class="nav-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="nav-actions">
+                <button class="nav-action-btn" onclick="openSearch()" title="Buscar (Ctrl+K)"><i data-lucide="search"></i></button>
+                <div class="notification-wrap">
+                    <button class="nav-action-btn" onclick="toggleNotifications()" title="Notificações" id="notifBtn">
+                        <i data-lucide="bell"></i><span class="notif-badge" id="notifBadge">0</span>
+                    </button>
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-header">
+                            <h4>Notificações</h4>
+                            <button onclick="clearNotifications()">Limpar</button>
+                        </div>
+                        <div class="notif-list" id="notifList">
+                            <div class="notif-empty">Sem notificações</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-menu-wrap">
+                    <button class="user-avatar-btn" onclick="toggleUserMenu()" id="userAvatarBtn">
+                        <div class="avatar-circle" id="avatarCircle">U</div>
+                        <span class="user-name-nav" id="userNameNav">Usuário</span>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="#" onclick="showPage('account');showAccountTab('profileTab');toggleUserMenu()"><i data-lucide="user"></i> Meu Perfil</a>
+                        <a href="#" onclick="showPage('account');showAccountTab('settingsTab');toggleUserMenu()"><i data-lucide="settings"></i> Configurações</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="handleLogout()" class="logout-link"><i data-lucide="log-out"></i> Sair</a>
+                    </div>
+                </div>
             </div>
+            <button class="nav-toggle" id="navToggle" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
@@ -44,7 +154,7 @@
                     <button class="btn btn-primary" onclick="showPage('dashboard')">Começar Agora</button>
                 </div>
                 <div class="hero-image">
-                    <div class="hero-box">📈</div>
+                    <div class="hero-box"><i data-lucide="trending-up"></i></div>
                 </div>
             </div>
 
@@ -53,22 +163,22 @@
                 <h2>Recursos Principais</h2>
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon"><i data-lucide="bar-chart-2"></i></div>
                         <h3>Dashboard Inteligente</h3>
                         <p>Visualize métricas importantes e acompanhe seu progresso em tempo real</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">✓</div>
+                        <div class="feature-icon"><i data-lucide="check-circle"></i></div>
                         <h3>Gerenciador de Tarefas</h3>
                         <p>Crie, edite e organize suas tarefas com facilidade e eficiência</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">📱</div>
+                        <div class="feature-icon"><i data-lucide="smartphone"></i></div>
                         <h3>Responsivo</h3>
                         <p>Funciona perfeitamente em desktop, tablet e mobile</p>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
+                        <div class="feature-icon"><i data-lucide="zap"></i></div>
                         <h3>Rápido e Leve</h3>
                         <p>Interface otimizada para melhor performance e experiência</p>
                     </div>
@@ -95,16 +205,15 @@
         <!-- Dashboard Page -->
         <section id="dashboard" class="page">
             <div class="dashboard-header">
-                <h1>Dashboard</h1>
-                <p>Acompanhe suas métricas e progresso</p>
+                <h1 id="dashboardGreeting" style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="hand"></i> Bom dia, Usuário!</h1>
+                <p>Aqui está o resumo da sua produtividade</p>
             </div>
 
             <!-- Tabs -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="showTab('overview')">Visão Geral</button>
-                <button class="tab-btn" onclick="showTab('analytics')">Análitica</button>
-                <button class="tab-btn" onclick="showTab('users')">Usuários</button>
-                <button class="tab-btn" onclick="showTab('settings')">Configurações</button>
+                <button class="tab-btn active" id="tabBtn-overview" onclick="showTab('overview')">Visão Geral</button>
+                <button class="tab-btn" id="tabBtn-dash-tasks" onclick="showTab('dash-tasks')">Tarefas</button>
+                <button class="tab-btn" id="tabBtn-dash-finances" onclick="showTab('dash-finances')">Finanças</button>
             </div>
 
             <!-- Tab Content -->
@@ -113,146 +222,109 @@
                 <div id="overview" class="tab-pane active">
                     <div class="dashboard-grid">
                         <div class="card">
+                            <h3>Tarefas Pendentes</h3>
+                            <p class="card-number" id="dashMixTasks">0</p>
+                            <p class="card-meta">Aguardando ação</p>
+                        </div>
+                        <div class="card">
+                            <h3>Saldo Principal</h3>
+                            <p class="card-number" id="dashMixBalance">R$ 0,00</p>
+                            <p class="card-meta">Disponível</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                        <div class="chart-container">
+                            <h3>Tarefas por Status</h3>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="mixStatusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Despesas por Categoria</h3>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="mixFinanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks Dash Tab -->
+                <div id="dash-tasks" class="tab-pane">
+                    <div class="dashboard-grid">
+                        <div class="card">
                             <h3>Tarefas Totais</h3>
-                            <p class="card-number">24</p>
-                            <p class="card-meta">↑ 12% este mês</p>
+                            <p class="card-number" id="dashTotalTasks">0</p>
+                            <p class="card-meta">Ativas no momento</p>
                         </div>
                         <div class="card">
                             <h3>Concluídas</h3>
-                            <p class="card-number">18</p>
-                            <p class="card-meta">75% completo</p>
+                            <p class="card-number" id="dashCompletedTasks">0</p>
+                            <p class="card-meta" id="dashCompletedPct">0% completo</p>
                         </div>
                         <div class="card">
                             <h3>Pendentes</h3>
-                            <p class="card-number">6</p>
-                            <p class="card-meta">25% restante</p>
+                            <p class="card-number" id="dashPendingTasks">0</p>
+                            <p class="card-meta" id="dashPendingPct">0% restante</p>
                         </div>
                         <div class="card">
                             <h3>Vencidas</h3>
-                            <p class="card-number">0</p>
-                            <p class="card-meta">Sem atrasos</p>
+                            <p class="card-number" id="dashOverdueTasks" style="color: #ff6b6b;">0</p>
+                            <p class="card-meta" id="dashOverdueMeta">Sem atrasos</p>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
                         <div class="chart-container">
                             <h3>Tarefas por Status</h3>
-                            <svg id="statusChart" width="100%" height="250" style="touch-action: none;"></svg>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
                         </div>
                         <div class="chart-container">
                             <h3>Tarefas por Prioridade</h3>
-                            <svg id="priorityChart" width="100%" height="250" style="touch-action: none;"></svg>
-                        </div>
-                    </div>
-
-                    <div class="chart-container" style="margin-top: 2rem;">
-                        <h3>Progresso da Semana</h3>
-                        <div class="progress-bar-item">
-                            <span>Seg</span>
-                            <div class="progress-bar"><div style="width: 60%"></div></div>
-                        </div>
-                        <div class="progress-bar-item">
-                            <span>Ter</span>
-                            <div class="progress-bar"><div style="width: 75%"></div></div>
-                        </div>
-                        <div class="progress-bar-item">
-                            <span>Qua</span>
-                            <div class="progress-bar"><div style="width: 85%"></div></div>
-                        </div>
-                        <div class="progress-bar-item">
-                            <span>Qui</span>
-                            <div class="progress-bar"><div style="width: 70%"></div></div>
-                        </div>
-                        <div class="progress-bar-item">
-                            <span>Sex</span>
-                            <div class="progress-bar"><div style="width: 90%"></div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Analytics Tab -->
-                <div id="analytics" class="tab-pane">
-                    <div class="analytics-container">
-                        <div class="card">
-                            <h3>Performance Geral</h3>
-                            <div class="metric">
-                                <span>Tempo Médio por Tarefa</span>
-                                <strong>45 min</strong>
-                            </div>
-                            <div class="metric">
-                                <span>Taxa de Conclusão</span>
-                                <strong>92%</strong>
-                            </div>
-                            <div class="metric">
-                                <span>Produtividade</span>
-                                <strong>+18%</strong>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="priorityChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Users Tab -->
-                <div id="users" class="tab-pane">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Tarefas</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>João Silva</td>
-                                <td>joao@example.com</td>
-                                <td>12</td>
-                                <td><span class="badge active">Ativo</span></td>
-                            </tr>
-                            <tr>
-                                <td>Maria Santos</td>
-                                <td>maria@example.com</td>
-                                <td>8</td>
-                                <td><span class="badge active">Ativo</span></td>
-                            </tr>
-                            <tr>
-                                <td>Pedro Costa</td>
-                                <td>pedro@example.com</td>
-                                <td>15</td>
-                                <td><span class="badge active">Ativo</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Settings Tab -->
-                <div id="settings" class="tab-pane">
-                    <div class="settings-container">
-                        <div class="setting-group">
-                            <h3>Preferências Gerais</h3>
-                            <label class="checkbox">
-                                <input type="checkbox" checked>
-                                <span>Notificações ativas</span>
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox" checked>
-                                <span>Tema escuro</span>
-                            </label>
+                <!-- Finances Dash Tab -->
+                <div id="dash-finances" class="tab-pane">
+                    <div class="stats-grid" style="margin-bottom: 2rem;">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Saldo Atual</h3>
+                                <span class="stat-icon" style="background:rgba(108,92,231,0.1);color:#6c5ce7;"><i data-lucide="dollar-sign"></i></span>
+                            </div>
+                            <div class="stat-value" id="dashFinanceBalance">R$ 0,00</div>
                         </div>
-                        <div class="setting-group">
-                            <h3>Privacidade</h3>
-                            <label class="checkbox">
-                                <input type="checkbox" checked>
-                                <span>Perfil público</span>
-                            </label>
-                            <label class="checkbox">
-                                <input type="checkbox">
-                                <span>Compartilhar dados com análise</span>
-                            </label>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Receitas</h3>
+                                <span class="stat-icon" style="background:rgba(0,184,148,0.1);color:#00b894;"><i data-lucide="arrow-up-right"></i></span>
+                            </div>
+                            <div class="stat-value" id="dashFinanceIncomes" style="color:#00b894;">R$ 0,00</div>
                         </div>
-                        <button class="btn btn-secondary">Salvar Configurações</button>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h3>Despesas</h3>
+                                <span class="stat-icon" style="background:rgba(255,107,107,0.1);color:#ff6b6b;"><i data-lucide="arrow-down-right"></i></span>
+                            </div>
+                            <div class="stat-value" id="dashFinanceExpenses" style="color:#ff6b6b;">R$ 0,00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Despesas por Categoria</h3>
+                        <div style="height:250px;width:100%;display:flex;align-items:center;justify-content:center;">
+                            <canvas id="dashFinanceChart"></canvas>
+                        </div>
                     </div>
                 </div>
+            </div>
+
             </div>
         </section>
 
@@ -263,148 +335,411 @@
                 <button class="btn btn-primary" onclick="showAddTaskForm()">+ Nova Tarefa</button>
             </div>
 
-            <!-- Add Task Form (hidden by default) -->
+            <!-- New Task Form -->
             <div id="taskForm" class="task-form hidden">
+                <h3 id="taskFormTitle" style="margin-bottom: 1rem;">Nova Tarefa</h3>
                 <div class="form-group">
-                    <input type="text" id="taskTitle" placeholder="Título da tarefa" class="form-input">
+                    <input type="text" id="taskTitle" class="form-input" placeholder="O que precisa ser feito?">
                 </div>
                 <div class="form-group">
-                    <textarea id="taskDescription" placeholder="Descrição da tarefa" class="form-input" rows="3"></textarea>
+                    <textarea id="taskDescription" class="form-input" placeholder="Detalhes adicionais (opcional)" rows="3"></textarea>
                 </div>
-                <div class="form-group">
-                    <select id="taskPriority" class="form-input">
-                        <option value="low">Baixa Prioridade</option>
-                        <option value="medium" selected>Média Prioridade</option>
-                        <option value="high">Alta Prioridade</option>
-                    </select>
+                <div class="form-group" style="display:flex;gap:1rem;">
+                    <div style="flex:1;">
+                        <select id="taskCategory" class="form-input">
+                            <option value="Geral">Geral</option>
+                            <option value="Trabalho">Trabalho</option>
+                            <option value="Estudos">Estudos</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                        <input type="date" id="taskDueDate" class="form-input" title="Prazo de Entrega">
+                    </div>
+                    <div class="form-group" style="flex:1; margin-bottom: 0;">
+                        <select id="taskPriority" class="form-input">
+                            <option value="low">Baixa Prioridade</option>
+                            <option value="medium" selected>Média Prioridade</option>
+                            <option value="high">Alta Prioridade</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-actions">
-                    <button class="btn btn-primary" onclick="addTask()">Adicionar Tarefa</button>
+                <div class="form-actions" style="margin-top: 1rem;">
+                    <button id="btnSubmitTask" class="btn btn-primary" onclick="addTask()">Adicionar Tarefa</button>
                     <button class="btn btn-secondary" onclick="hideAddTaskForm()">Cancelar</button>
                 </div>
             </div>
 
-            <!-- Task Tabs -->
-            <div class="task-tabs">
-                <button class="task-tab-btn active" onclick="filterTasks('all')">Todas (0)</button>
-                <button class="task-tab-btn" onclick="filterTasks('pending')">Pendentes (0)</button>
-                <button class="task-tab-btn" onclick="filterTasks('completed')">Concluídas (0)</button>
+            <!-- Task Header Actions (Tabs + View Toggle) -->
+            <div class="tasks-header-actions">
+                <div class="task-tabs">
+                    <button class="task-tab-btn active" onclick="filterTasks('all')">Todas (0)</button>
+                    <button class="task-tab-btn" onclick="filterTasks('pending')">Pendentes (0)</button>
+                    <button class="task-tab-btn" onclick="filterTasks('completed')">Concluídas (0)</button>
+                </div>
+                <div class="view-toggles" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="view-btn" onclick="exportTasksCSV()" title="Exportar CSV"><i data-lucide="download"></i> Exportar</button>
+                    <button class="view-btn active" onclick="switchTaskView('list')" id="btnViewList"><i data-lucide="list"></i> Lista</button>
+                    <button class="view-btn" onclick="switchTaskView('kanban')" id="btnViewKanban"><i data-lucide="layout"></i> Kanban</button>
+                    <button class="view-btn" onclick="switchTaskView('calendar')" id="btnViewCalendar"><i data-lucide="calendar"></i> Calendário</button>
+                </div>
             </div>
 
-            <!-- Tasks List -->
+            <!-- Tasks List View -->
             <div id="tasksList" class="tasks-list">
                 <!-- Tasks will be added here dynamically -->
+            </div>
+
+            <!-- Kanban Board View -->
+            <div id="kanbanBoard" class="kanban-board">
+                <!-- Coluna: A Fazer -->
+                <div class="kanban-column">
+                    <div class="kanban-header">
+                        <h3><i data-lucide="circle"></i> A Fazer <span class="kanban-count" id="kbCountTodo">0</span></h3>
+                    </div>
+                    <div class="kanban-items" id="kbTodo" data-status="0">
+                        <!-- Itens -->
+                    </div>
+                </div>
+                <div class="kanban-column">
+                    <div class="kanban-header">
+                        <h3><i data-lucide="check-circle"></i> Concluídas <span class="kanban-count" id="kbCountDone">0</span></h3>
+                    </div>
+                    <div class="kanban-items" id="kbDone" data-status="1">
+                        <!-- Itens -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView" class="calendar-view">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">◀ Anterior</button>
+                    <div class="calendar-month-title" id="calendarMonthTitle">Mês Ano</div>
+                    <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">Próximo ▶</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Gerado pelo JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Account Page (Profile + Settings) -->
+        <section id="account" class="page">
+            <div class="dashboard-header">
+                <h1 id="accountPageTitle" style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="user"></i> Minha Conta</h1>
+                <p>Gerencie seu perfil e configurações</p>
+            </div>
+
+            <!-- Account Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showAccountTab('profileTab')" style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="user"></i> Meu Perfil</button>
+                <button class="tab-btn" onclick="showAccountTab('settingsTab')" style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="settings"></i> Configurações</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Profile Tab -->
+                <div id="profileTab" class="tab-pane active">
+                    <div class="profile-layout">
+                        <div class="profile-card-main">
+                            <div class="profile-avatar-section">
+                                <div class="profile-avatar" id="profileAvatar">U</div>
+                                <div class="profile-info">
+                                    <h2 id="profileName">Usuário</h2>
+                                    <p id="profileEmail">usuario@email.com</p>
+                                    <span class="badge active">Ativo</span>
+                                </div>
+                            </div>
+                            <div class="profile-form">
+                                <div class="form-group">
+                                    <label>Nome</label>
+                                    <input type="text" id="profileNameInput" class="form-input" placeholder="Seu nome">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" id="profileEmailInput" class="form-input" placeholder="Seu e-mail">
+                                </div>
+                                <div class="form-group">
+                                    <label>Bio</label>
+                                    <textarea id="profileBio" class="form-input" rows="3" placeholder="Conte sobre você..."></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="saveProfile()">Salvar Alterações</button>
+                            </div>
+                        </div>
+                        <div class="profile-sidebar">
+                            <div class="card">
+                                <h3 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="bar-chart"></i> Suas Estatísticas</h3>
+                                <div class="profile-stat"><span>Tarefas criadas</span><strong id="profileTotalTasks">0</strong></div>
+                                <div class="profile-stat"><span>Concluídas</span><strong id="profileCompletedTasks">0</strong></div>
+                                <div class="profile-stat"><span>Taxa de conclusão</span><strong id="profileCompletionRate">0%</strong></div>
+                                <div class="profile-stat"><span>Membro desde</span><strong id="profileMemberSince">-</strong></div>
+                            </div>
+                            <div class="card">
+                                <h3 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="clock"></i> Atividade Recente</h3>
+                                <div class="activity-feed" id="activityFeed">
+                                    <div class="notif-empty">Nenhuma atividade ainda</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsTab" class="tab-pane">
+                    <div class="settings-layout">
+                        <div class="settings-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="palette"></i></span><div><h3>Aparência</h3><p>Personalize o visual</p></div></div>
+                            <div class="setting-group">
+                                <label class="checkbox"><input type="checkbox" checked disabled><span>Tema escuro (ativo)</span></label>
+                                <label class="checkbox"><input type="checkbox" checked id="settingAnimations"><span>Animações e transições</span></label>
+                                <label class="checkbox"><input type="checkbox" checked id="settingGradients"><span>Gradientes nos elementos</span></label>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="bell"></i></span><div><h3>Notificações</h3><p>Controle suas notificações</p></div></div>
+                            <div class="setting-group">
+                                <label class="checkbox"><input type="checkbox" checked id="settingNotifTasks"><span>Notificar ao criar tarefas</span></label>
+                                <label class="checkbox"><input type="checkbox" checked id="settingNotifComplete"><span>Notificar ao concluir</span></label>
+                                <label class="checkbox"><input type="checkbox" id="settingNotifSound"><span>Som de notificação</span></label>
+                                <label class="checkbox"><input type="checkbox" checked id="settingNotifBadge"><span>Badge com contagem</span></label>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="lock"></i></span><div><h3>Privacidade & Segurança</h3><p>Segurança da conta</p></div></div>
+                            <div class="setting-group">
+                                <label class="checkbox"><input type="checkbox" checked id="settingPublicProfile"><span>Perfil público</span></label>
+                                <label class="checkbox"><input type="checkbox" id="settingShareData"><span>Compartilhar dados</span></label>
+                                <label class="checkbox"><input type="checkbox" checked id="settingRemember"><span>Manter sessão ativa</span></label>
+                            </div>
+                            <div class="form-group" style="margin-top:1rem">
+                                <label>Alterar Senha</label>
+                                <input type="password" class="form-input" placeholder="Senha atual" style="margin-bottom:0.5rem">
+                                <input type="password" class="form-input" placeholder="Nova senha" style="margin-bottom:0.5rem">
+                                <input type="password" class="form-input" placeholder="Confirmar nova senha">
+                                <button class="btn btn-secondary" style="margin-top:1rem" onclick="showNotification('Senha alterada!','success')">Alterar Senha</button>
+                            </div>
+                        </div>
+                        <div class="settings-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="globe"></i></span><div><h3>Idioma & Região</h3><p>Idioma e formato de data</p></div></div>
+                            <div class="form-group"><label>Idioma</label><select class="form-input" id="settingLanguage"><option value="pt-BR" selected>Português (Brasil)</option><option value="en">English</option><option value="es">Español</option></select></div>
+                            <div class="form-group"><label>Formato de data</label><select class="form-input" id="settingDateFormat"><option value="dd/mm/yyyy" selected>DD/MM/AAAA</option><option value="mm/dd/yyyy">MM/DD/AAAA</option><option value="yyyy-mm-dd">AAAA-MM-DD</option></select></div>
+                            <div class="form-group"><label>Fuso horário</label><select class="form-input" id="settingTimezone"><option value="-3" selected>Brasília (GMT-3)</option><option value="0">Londres (GMT+0)</option><option value="-5">Nova York (GMT-5)</option></select></div>
+                        </div>
+                        <div class="settings-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="database"></i></span><div><h3>Dados & Armazenamento</h3><p>Gerencie seus dados</p></div></div>
+                            <div class="settings-actions">
+                                <button class="btn btn-secondary" onclick="exportData()"><i data-lucide="download"></i> Exportar Dados</button>
+                                <button class="btn btn-secondary" onclick="showNotification('Em breve!','info')"><i data-lucide="upload"></i> Importar</button>
+                                <button class="btn btn-secondary" onclick="clearAllData()"><i data-lucide="trash-2"></i> Limpar Cache</button>
+                            </div>
+                        </div>
+                        <div class="settings-card danger-card">
+                            <div class="settings-card-header"><span class="settings-card-icon"><i data-lucide="alert-triangle"></i></span><div><h3>Zona de Perigo</h3><p>Ações irreversíveis</p></div></div>
+                            <div class="settings-actions">
+                                <button class="btn btn-danger" onclick="confirmDeleteAccount()"><i data-lucide="user-x"></i> Excluir Conta</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem;display:flex;gap:1rem;">
+                        <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+                        <button class="btn btn-secondary" onclick="resetSettings()">Restaurar Padrões</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Investments Page -->
+        <section id="investments" class="page">
+            <div class="dashboard-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h1><i data-lucide="trending-up"></i> Central de Investimentos</h1>
+                    <p>Acompanhe Câmbio, Cripto e Ações da B3 em Tempo Real</p>
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <button class="btn btn-primary" onclick="fetchRealTimeMarketData()"><i data-lucide="refresh-cw" style="width:16px;height:16px;vertical-align:text-bottom;"></i> Atualizar Cotações</button>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Principais Moedas</h3>
+            <div class="inv-grid" style="margin-bottom: 2rem;">
+                <div class="inv-card" style="background: linear-gradient(135deg, #00b894, #55efc4);">
+                    <div class="inv-card-header">
+                        <h3>Dólar (USD/BRL)</h3>
+                        <span class="inv-icon"><i data-lucide="dollar-sign"></i></span>
+                    </div>
+                    <div class="inv-value" id="market-usd-val">Carregando...</div>
+                    <div class="inv-sub">Variação: <strong id="market-usd-var">--</strong></div>
+                    <div class="inv-chart"><canvas id="invChart1" height="60"></canvas></div>
+                </div>
+                <div class="inv-card" style="background: linear-gradient(135deg, #0984e3, #74b9ff);">
+                    <div class="inv-card-header">
+                        <h3>Euro (EUR/BRL)</h3>
+                        <span class="inv-icon"><i data-lucide="euro"></i></span>
+                    </div>
+                    <div class="inv-value" id="market-eur-val">Carregando...</div>
+                    <div class="inv-sub">Variação: <strong id="market-eur-var">--</strong></div>
+                    <div class="inv-chart"><canvas id="invChart2" height="60"></canvas></div>
+                </div>
+                <div class="inv-card" style="background: linear-gradient(135deg, #e84393, #fd79a8);">
+                    <div class="inv-card-header">
+                        <h3>Bitcoin (BTC/BRL)</h3>
+                        <span class="inv-icon"><i data-lucide="bitcoin"></i></span>
+                    </div>
+                    <div class="inv-value" id="market-btc-val">Carregando...</div>
+                    <div class="inv-sub">Variação: <strong id="market-btc-var">--</strong></div>
+                    <div class="inv-chart"><canvas id="invChart3" height="60"></canvas></div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Mercado de Ações (Radar B3)</h3>
+            <div class="stock-ticker-wrapper" style="margin-bottom: 2rem; overflow-x: auto; padding-bottom: 1rem;">
+                <div class="stock-ticker" id="stock-ticker" style="display:flex; gap:1rem; min-width:max-content;">
+                    <div style="color:var(--text-muted)">Carregando ações...</div>
+                </div>
+            </div>
+
+            <div class="inv-bottom-grid">
+                <div class="inv-table-container card" style="overflow-x:auto;">
+                    <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Análise de Ativos (Geral)</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Ativo</th>
+                                <th>Preço Atual</th>
+                                <th>Máximo (Dia)</th>
+                                <th>Mínimo (Dia)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="market-table-body">
+                            <tr><td colspan="4" style="text-align:center;">Buscando dados da API...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="inv-bar-container card">
+                    <h3 style="margin-bottom:1rem; color:var(--text-secondary);">Variação (%) dos Principais Ativos</h3>
+                    <div style="position:relative; height:250px; width:100%;">
+                        <canvas id="invBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finances Page -->
+        <section id="finances" class="page">
+            <div class="dashboard-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h1 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="wallet"></i> Finanças Pessoais</h1>
+                    <p>Controle suas receitas e despesas</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <select id="financeMonthFilter" class="form-input" style="min-width: 150px; margin-bottom: 0;" onchange="renderFinances()">
+                        <option value="all">Todo o Período</option>
+                        <!-- Os meses serão preenchidos via JS -->
+                    </select>
+                    <button class="btn btn-primary" onclick="showTransactionModal()"><i data-lucide="plus" style="width:16px;height:16px;vertical-align:text-bottom;"></i> Nova Transação</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Saldo Atual</h3>
+                        <span class="stat-icon" style="background:rgba(108,92,231,0.1);color:#6c5ce7;"><i data-lucide="dollar-sign"></i></span>
+                    </div>
+                    <div class="stat-value" id="financeBalance">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Receitas (Mês)</h3>
+                        <span class="stat-icon" style="background:rgba(0,184,148,0.1);color:#00b894;"><i data-lucide="arrow-up-right"></i></span>
+                    </div>
+                    <div class="stat-value" id="financeIncomes" style="color:#00b894;">R$ 0,00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Despesas (Mês)</h3>
+                        <span class="stat-icon" style="background:rgba(255,107,107,0.1);color:#ff6b6b;"><i data-lucide="arrow-down-right"></i></span>
+                    </div>
+                    <div class="stat-value" id="financeExpenses" style="color:#ff6b6b;">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="charts-grid" style="margin-top: 1.5rem;">
+                <div class="chart-card">
+                    <h3>Últimas Transações</h3>
+                    <div class="transaction-list" id="transactionList" style="margin-top:1rem;display:flex;flex-direction:column;gap:0.8rem;">
+                        <div class="notif-empty">Nenhuma transação registrada.</div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Despesas por Categoria</h3>
+                    <div style="height:250px;width:100%;display:flex;align-items:center;justify-content:center;">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Help Page -->
         <section id="help" class="page">
             <div class="dashboard-header">
-                <h1>❓ Centro de Ajuda</h1>
+                <h1 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="help-circle"></i> Centro de Ajuda</h1>
                 <p>Dicas, sugestões e guias de uso</p>
             </div>
 
             <div class="help-grid">
                 <div class="help-card">
-                    <h3>🚀 Como Começar</h3>
+                    <h3 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="rocket"></i> Como Começar</h3>
                     <ul>
                         <li>Clique em "Tarefas" para gerenciar suas atividades</li>
                         <li>Use "+ Nova Tarefa" para criar uma tarefa</li>
                         <li>Defina a prioridade (Baixa, Média, Alta)</li>
-                        <li>Marque como completa quando terminar (✓)</li>
-                        <li>Delete tarefas que não são mais necessárias</li>
                     </ul>
                 </div>
-
                 <div class="help-card">
-                    <h3>📊 Usando o Dashboard</h3>
+                    <h3 style="display:flex;align-items:center;gap:0.5rem;"><i data-lucide="bar-chart-2"></i> Usando o Dashboard</h3>
                     <ul>
                         <li><strong>Visão Geral:</strong> Métricas em tempo real</li>
                         <li><strong>Análitica:</strong> Performance e produtividade</li>
-                        <li><strong>Usuários:</strong> Lista de usuários do sistema</li>
-                        <li><strong>Configurações:</strong> Personalize suas preferências</li>
                     </ul>
-                </div>
-
-                <div class="help-card">
-                    <h3>💡 Dicas & Truques</h3>
-                    <ul>
-                        <li>Use prioridades para organizar melhor</li>
-                        <li>Filtre tarefas por status (Todas, Pendentes, Concluídas)</li>
-                        <li>Seus dados são salvos automaticamente</li>
-                        <li>Alterne entre tema claro e escuro (botão no topo)</li>
-                        <li>Acesse de qualquer dispositivo - sempre sincronizado!</li>
-                    </ul>
-                </div>
-
-                <div class="help-card">
-                    <h3>⌨️ Atalhos</h3>
-                    <ul>
-                        <li><code>Enter</code> - Confirmar nova tarefa</li>
-                        <li><code>F12</code> - Abrir desenvolvedor (problemas?)</li>
-                        <li><code>Ctrl+K</code> - Pesquisar (em breve)</li>
-                    </ul>
-                </div>
-
-                <div class="help-card">
-                    <h3>🎨 Temas</h3>
-                    <ul>
-                        <li>Clique no botão de tema no topo da página</li>
-                        <li>Sua preferência é salva automaticamente</li>
-                        <li>Tema escuro (Luna) - Melhor para a noite</li>
-                        <li>Tema claro (Solar) - Melhor para o dia</li>
-                    </ul>
-                </div>
-
-                <div class="help-card">
-                    <h3>❓ FAQ</h3>
-                    <ul>
-                        <li><strong>Dados perdidos?</strong> Verifique seu banco MySQL</li>
-                        <li><strong>Temas não mudam?</strong> Limpe o cache (Ctrl+Shift+Del)</li>
-                        <li><strong>API não responde?</strong> Reinicie o backend</li>
-                        <li><strong>Demora para carregar?</strong> Verifique sua conexão</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="suggestions-section">
-                <h2>💬 Sugestões de Funcionalidades</h2>
-                <p style="color: var(--light-text); margin-bottom: 2rem;">Recursos que planejamos adicionar em breve:</p>
-                <div class="suggestions-grid">
-                    <div class="suggestion-item">
-                        <h4>📅 Calendário</h4>
-                        <p>Visualize suas tarefas em um calendário interativo</p>
-                    </div>
-                    <div class="suggestion-item">
-                        <h4>🔔 Notificações</h4>
-                        <p>Receba lembretes de tarefas que estão vencendo</p>
-                    </div>
-                    <div class="suggestion-item">
-                        <h4>📊 Relatórios</h4>
-                        <p>Gere relatórios de produtividade e progresso</p>
-                    </div>
-                    <div class="suggestion-item">
-                        <h4>👥 Compartilhamento</h4>
-                        <p>Compartilhe tarefas e collaborate em tempo real</p>
-                    </div>
-                    <div class="suggestion-item">
-                        <h4>📱 App Mobile</h4>
-                        <p>Aplicativo nativo para iOS e Android</p>
-                    </div>
-                    <div class="suggestion-item">
-                        <h4>🤖 IA Assistente</h4>
-                        <p>Assistente inteligente para sugerir tarefas</p>
-                    </div>
                 </div>
             </div>
         </section>
+        <!-- AI Assistant Widget -->
+        <button class="ai-widget-btn" onclick="toggleAIChat()" title="Assistente IA"><i data-lucide="sparkles"></i></button>
+        <div class="ai-chat-panel" id="aiChatPanel">
+            <div class="ai-chat-header">
+                <h3 style="display:flex;align-items:center;gap:0.5rem;"><div class="ai-status"></div> <i data-lucide="bot"></i> Assistente IA</h3>
+                <button class="ai-close-btn" onclick="toggleAIChat()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="ai-chat-body" id="aiChatBody">
+                <div class="ai-message bot">
+                    Olá! Sou seu assistente do DashboardPro. Como posso ajudar com suas tarefas hoje?
+                </div>
+            </div>
+            <div class="ai-chat-input">
+                <input type="text" id="aiChatInput" placeholder="Digite uma pergunta..." onkeypress="handleAIChatKeyPress(event)">
+                <button onclick="sendAIMessage()"><i data-lucide="send"></i></button>
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2026 DashboardPro. Todos os direitos reservados.</p>
+        <div class="footer-content">
+            <div class="footer-brand" style="display:flex;align-items:center;gap:0.5rem;">
+                <i data-lucide="layout-dashboard"></i>
+                <span>DashboardPro</span>
+            </div>
+            <p>&copy; 2026 DashboardPro. Todos os direitos reservados.</p>
+        </div>
     </footer>
 
     <script src="script.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
